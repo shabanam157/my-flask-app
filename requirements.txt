@@ -1,4 +1,4 @@
-audioop-lts==0.2.1
+audioop-lts<0.2.0
 beautifulsoup4==4.13.4
 blinker==1.9.0
 buildozer==1.5.0
