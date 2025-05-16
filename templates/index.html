@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Assistant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <h1>{{ greeting }}</h1>
+    <h2>I am your voice assistant. How can I help you today?</h2>
+
+    <!-- Voice Input -->
+    <button id="start-voice" style="padding: 15px; font-size: 18px;">🎤 Speak Now</button>
+    <p><strong>Your Command:</strong> <span id="voice-query">None</span></p>
+
+    <!-- Response Display -->
+    <div id="response" style="margin-top:20px;">
+        <strong>Response:</strong>
+        <p id="response-text"></p>
+    </div>
+
+    <script>
+        // Helper: Use Text-to-Speech for responses
+        function speakResponse(text) {
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(text);
+            synth.speak(utterance);
+        }
+
+        // Handle Voice Input (Speech Recognition)
+        $("#start-voice").on("click", function () {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "en-US";
+            recognition.start();
+
+            // Event when a user speaks
+            recognition.onresult = (event) => {
+                const query = event.results[0][0].transcript;
+                $("#voice-query").text(query); // Show spoken command
+                processQuery(query); // Process the command
+            };
+
+            // Handle errors or no speech detected
+            recognition.onerror = (event) => {
+                console.log("Speech Recognition Error:", event);
+                $("#voice-query").text("Error or No Speech Detected.");
+            };
+        });
+
+        // Process the Query via AJAX (Send to Flask Backend)
+        function processQuery(query) {
+            $("#response-text").text("Processing...");
+            $.post("/process", { query: query }, function (data) {
+                $("#response-text").text(data.response);
+
+                // Speak the response back to the user
+                speakResponse(data.response);
+
+                // If exit command is issued
+                if (data.exit) {
+                    setTimeout(() => alert("Goodbye!"), 1000);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
